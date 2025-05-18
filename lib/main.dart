@@ -21,10 +21,11 @@ class Homepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final counterBloc = CounterBloc();
     return MultiBlocProvider(
       providers: [
-        BlocProvider<CounterBloc>(create: (context) => CounterBloc()),
-        BlocProvider<UserBloc>(create: (context) => UserBloc()),
+        BlocProvider<CounterBloc>(create: (context) => counterBloc),
+        BlocProvider<UserBloc>(create: (context) => UserBloc(counterBloc)),
       ],
       child: Builder(
         builder: (context) {
@@ -57,6 +58,14 @@ class Homepage extends StatelessWidget {
                 IconButton(
                   onPressed: () {
                     final userBloc = context.read<UserBloc>();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => BlocProvider.value( value: userBloc,
+                              child: Job(),
+                            ),
+                      ),
+                    );
                     userBloc.add(
                       UserGetUsersJobEvent(context.read<CounterBloc>().state),
                     );
@@ -86,23 +95,32 @@ class Homepage extends StatelessWidget {
                         );
                       },
                     ),
-                    BlocBuilder<UserBloc, UserState>(
-                      builder: (context, state) {
-                        final user = state.users;
-                        final job = state.job;
-                        return Column(
-                          children: [
-                            if (state.isLoading) CircularProgressIndicator(),
-                            if (job.isNotEmpty)
-                              ...state.job.map((e) => Text(e.name)),
-                          ],
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class Job extends StatelessWidget {
+  const Job({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: BlocBuilder<UserBloc, UserState>(
+        builder: (context, state) {
+          final job = state.job;
+          return Column(
+            children: [
+              if (state.isLoading) CircularProgressIndicator(),
+              if (job.isNotEmpty) ...state.job.map((e) => Text(e.name)),
+            ],
           );
         },
       ),

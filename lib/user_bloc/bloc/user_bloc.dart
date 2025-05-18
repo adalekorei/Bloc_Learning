@@ -1,13 +1,30 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_learning/counter_bloc.dart';
 import 'package:meta/meta.dart';
 
 part 'user_event.dart';
 part 'user_state.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
-  UserBloc() : super(UserState()) {
+  final CounterBloc counterBloc;
+  late final StreamSubscription counterBlocSubscription;
+
+  UserBloc(this.counterBloc) : super(UserState()) {
     on<UserGetUsersEvent>(_onGetUser);
     on<UserGetUsersJobEvent>(_onGetUserJob);
+    counterBlocSubscription = counterBloc.stream.listen((state) {
+      if (state <= 0) {
+        add(UserGetUsersEvent(0));
+        add(UserGetUsersJobEvent(0));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() async {
+    counterBlocSubscription.cancel();
+    return super.close();
   }
 
   _onGetUser(UserGetUsersEvent event, Emitter<UserState> emit) async {
@@ -20,7 +37,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     emit(state.copyWith(users: users));
   }
 
-   _onGetUserJob(UserGetUsersJobEvent event, Emitter<UserState> emit) async {
+  _onGetUserJob(UserGetUsersJobEvent event, Emitter<UserState> emit) async {
     emit(state.copyWith(isLoading: true));
     await Future.delayed(Duration(seconds: 1));
     final job = List.generate(
