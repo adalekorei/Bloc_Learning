@@ -31,48 +31,65 @@ class Homepage extends StatelessWidget {
         builder: (context) {
           final counterBloc = BlocProvider.of<CounterBloc>(context);
           return Scaffold(
-            floatingActionButton: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    counterBloc.add(CounterIncEvent());
-                  },
-                  icon: Icon(Icons.plus_one),
-                ),
-                IconButton(
-                  onPressed: () {
-                    counterBloc.add(CounterDecEvent());
-                  },
-                  icon: Icon(Icons.exposure_minus_1),
-                ),
-                IconButton(
-                  onPressed: () {
-                    final userBloc = context.read<UserBloc>();
-                    userBloc.add(
-                      UserGetUsersEvent(context.read<CounterBloc>().state),
-                    );
-                  },
-                  icon: Icon(Icons.person),
-                ),
-                IconButton(
-                  onPressed: () {
-                    final userBloc = context.read<UserBloc>();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder:
-                            (_) => BlocProvider.value( value: userBloc,
-                              child: Job(),
-                            ),
-                      ),
-                    );
-                    userBloc.add(
-                      UserGetUsersJobEvent(context.read<CounterBloc>().state),
-                    );
-                  },
-                  icon: Icon(Icons.work),
-                ),
-              ],
+            floatingActionButton: BlocConsumer<CounterBloc, int>(
+              listenWhen: (prev, current) => prev > current,
+              listener: (context, state) {
+               if (state == 0){
+                 Scaffold.of(context).showBottomSheet(
+                  (context) => Container(
+                    color: Colors.amber,
+                    height: 30,
+                    width: double.infinity,
+                    child: Text('state is 0'),
+                  ),
+                );
+               }
+              },
+              builder: (context, state) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(state.toString()),
+                  IconButton(
+                    onPressed: () {
+                      counterBloc.add(CounterIncEvent());
+                    },
+                    icon: Icon(Icons.plus_one),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      counterBloc.add(CounterDecEvent());
+                    },
+                    icon: Icon(Icons.exposure_minus_1),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      final userBloc = context.read<UserBloc>();
+                      userBloc.add(
+                        UserGetUsersEvent(context.read<CounterBloc>().state),
+                      );
+                    },
+                    icon: Icon(Icons.person),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      final userBloc = context.read<UserBloc>();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) => BlocProvider.value(
+                                value: userBloc,
+                                child: Job(),
+                              ),
+                        ),
+                      );
+                      userBloc.add(
+                        UserGetUsersJobEvent(context.read<CounterBloc>().state),
+                      );
+                    },
+                    icon: Icon(Icons.work),
+                  ),
+                ],
+              ),
             ),
             body: SafeArea(
               child: Center(
